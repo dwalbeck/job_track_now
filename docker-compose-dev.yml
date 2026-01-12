@@ -1,0 +1,99 @@
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:12
+    container_name: psql.jobtracknow.com
+    hostname: psql.jobtracknow.com
+    restart: always
+    env_file:
+      - ./backend/.env
+    expose:
+      - "5432"
+    volumes:
+      - /var/lib/postgresql-docker/12/main:/var/lib/postgresql/data
+      - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      job_tracker_network:
+        ipv4_address: 172.20.0.15
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apiuser -d jobtracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: api.jobtracknow.com
+    hostname: api.jobtracknow.com
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    expose:
+      - "8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      job_tracker_network:
+        ipv4_address: 172.20.0.10
+    volumes:
+      - ./backend/job_docs:/app/job_docs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile-dev
+      args:
+        REACT_APP_API_BASE_URL: http://api.jobtracknow.com
+    container_name: portal.jobtracknow.com
+    hostname: portal.jobtracknow.com
+    restart: unless-stopped
+    env_file:
+      - ./frontend/.env
+    expose:
+      - "3000"
+      - "443"
+      - "80"
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - db
+    networks:
+      job_tracker_network:
+        ipv4_address: 172.20.0.5
+    volumes:
+      - ./frontend:/var/www/jobtracker
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Named volumes for data persistence
+volumes:
+  main:
+  #postgres_data:
+  #  driver: local
+  job_docs:
+    driver: local
+
+# Custom network for service communication
+networks:
+  job_tracker_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16

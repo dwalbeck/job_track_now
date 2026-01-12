@@ -1,0 +1,17 @@
+# ===== Job Track Now Website notes =============================================================================
+
+Homepage
+features
+screenshots
+    list of links on left used as sub-navigation
+    each link labeled using short text description
+    right area displays the screenshot image
+
+documentation
+    format directly from README.md into HTML
+contact
+    simple contact form that will send email to my address
+  
+    
+    
+  
