@@ -203,6 +203,8 @@ CREATE TABLE IF NOT EXISTS personal (
 	state                   varchar(92),
 	zip                     varchar(10),
 	country                 varchar(2),
+    login                   varchar(64),
+    passwd                  varchar(64),
 	no_response_week        smallint NOT NULL DEFAULT 6,
     default_llm             varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
     resume_extract_llm      varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
