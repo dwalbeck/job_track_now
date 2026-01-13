@@ -3,17 +3,17 @@
 .idea
 .env
 
-backend/.idea
-backend/.venv
-backend/.env
+job_track_now-api/.idea
+job_track_now-api/.venv
+job_track_now-api/.env
 
-backend/build
-backend/dist
-backend/job_docs
-backend/node_modules
-backend/venv
+job_track_now-api/build
+job_track_now-api/dist
+job_track_now-api/job_docs
+job_track_now-api/node_modules
+job_track_now-api/venv
 
-frontend/.env
+job_track_now-portal/.env
 
-frontend/build
-frontend/node_modules
+job_track_now-portal/build
+job_track_now-portal/node_modules

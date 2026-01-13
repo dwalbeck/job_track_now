@@ -6,7 +6,7 @@ services:
     hostname: psql.jobtracknow.com
     restart: always
     env_file:
-      - ./backend/.env
+      - ./job_track_now-api/.env
     expose:
       - "5432"
     volumes:
@@ -24,13 +24,13 @@ services:
   # Backend API Service
   backend:
     build:
-      context: ./backend
+      context: ./job_track_now-api
       dockerfile: Dockerfile
     container_name: api.jobtracknow.com
     hostname: api.jobtracknow.com
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./job_track_now-api/.env
     expose:
       - "8000"
     ports:
@@ -42,7 +42,7 @@ services:
       job_tracker_network:
         ipv4_address: 172.20.0.10
     volumes:
-      - ./backend/job_docs:/app/job_docs
+      - ./job_track_now-api/job_docs:/app/job_docs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -52,7 +52,7 @@ services:
   # Frontend React Application
   frontend:
     build:
-      context: ./frontend
+      context: ./job_track_now-portal
       dockerfile: Dockerfile-dev
       args:
         REACT_APP_API_BASE_URL: http://api.jobtracknow.com
@@ -60,7 +60,7 @@ services:
     hostname: portal.jobtracknow.com
     restart: unless-stopped
     env_file:
-      - ./frontend/.env
+      - ./job_track_now-portal/.env
     expose:
       - "3000"
       - "443"
@@ -74,7 +74,7 @@ services:
       job_tracker_network:
         ipv4_address: 172.20.0.5
     volumes:
-      - ./frontend:/var/www/jobtracker
+      - ./job_track_now-portal:/var/www/jobtracker
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80"]
       interval: 30s

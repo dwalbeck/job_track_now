@@ -6,7 +6,7 @@ services:
     hostname: psql.jobtracknow.com
     restart: always
     env_file:
-      - ./backend/.env
+      - ./job_track_now-api/.env
     expose:
       - "5432"
     volumes:
@@ -26,13 +26,13 @@ services:
   # Backend API Service
   backend:
     build:
-      context: ./backend
+      context: ./job_track_now-api
       dockerfile: Dockerfile
     container_name: api.jobtracknow.com
     hostname: api.jobtracknow.com
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./job_track_now-api/.env
     expose:
       - "8000"
       - "80"
@@ -46,7 +46,7 @@ services:
       job_tracker_network:
         ipv4_address: 172.20.0.10
     volumes:
-      - ./backend/job_docs:/app/job_docs
+      - ./job_track_now-api/job_docs:/app/job_docs
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
@@ -58,15 +58,15 @@ services:
   # Frontend React Application
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile-dev
+      context: ./job_track_now-portal
+      dockerfile: Dockerfile
       args:
         REACT_APP_API_BASE_URL: http://api.jobtrackernow.com
     container_name: portal.jobtracknow.com
     hostname: portal.jobtracknow.com
     restart: unless-stopped
     env_file:
-      - ./frontend/.env
+      - ./job_track_now-portal/.env
     expose:
       - "3000"
       - "443"
@@ -76,8 +76,6 @@ services:
     depends_on:
       - backend
       - db
-    volumes:
-      - ./frontend/src:/var/www/jobtracker/src
     networks:
       job_tracker_network:
         ipv4_address: 172.20.0.5
@@ -89,9 +87,7 @@ services:
 
 # Named volumes for data persistence
 volumes:
-  #main:
-  #postgres_data:
-  #  driver: local
+
   src:
     driver: local
   job_docs:
