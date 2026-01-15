@@ -35,9 +35,10 @@ services:
       - ./job_track_now-api/.env
     expose:
       - "8000"
+      - "443"
       - "80"
     ports:
-      - "8080:80"
+      - "8443:443"
       - "8000:80"
     depends_on:
       db:
@@ -50,7 +51,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ["CMD", "curl", "-f", "http://api.jobtracknow.com:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -61,7 +62,7 @@ services:
       context: ./job_track_now-portal
       dockerfile: Dockerfile
       args:
-        REACT_APP_API_BASE_URL: http://api.jobtrackernow.com
+        REACT_APP_API_BASE_URL: https://api.jobtrackernow.com
     container_name: portal.jobtracknow.com
     hostname: portal.jobtracknow.com
     restart: unless-stopped
@@ -73,6 +74,7 @@ services:
       - "80"
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
       - db
