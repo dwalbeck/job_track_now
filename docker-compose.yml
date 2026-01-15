@@ -38,7 +38,7 @@ services:
       - "80"
     ports:
       - "8080:80"
-      - "8000:8000"
+      - "8000:80"
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
       interval: 30s
       timeout: 10s
       retries: 3
