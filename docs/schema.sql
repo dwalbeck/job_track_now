@@ -256,6 +256,22 @@ CREATE TABLE IF NOT EXISTS company (
     PRIMARY KEY (company_id)
 );
 
+CREATE TABLE IF NOT EXISTS oauth_codes (
+    code                    VARCHAR(64) PRIMARY KEY,
+    username                VARCHAR(255) NOT NULL,
+    redirect_uri            TEXT NOT NULL,
+    code_challenge          VARCHAR(255) NOT NULL,
+    code_challenge_method   VARCHAR(10) NOT NULL DEFAULT 'S256',
+    state                   VARCHAR(255) NOT NULL,
+    scope                   VARCHAR(255) NOT NULL DEFAULT 'all',
+    created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    used                    BOOLEAN NOT NULL DEFAULT FALSE,
+    used_at                 TIMESTAMP NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_codes_created_at ON oauth_codes(created_at);
+CREATE INDEX IF NOT EXISTS idx_oauth_codes_username ON oauth_codes(username);
+
 
 ALTER TABLE job
     ADD CONSTRAINT job_resume_fk FOREIGN KEY (resume_id) REFERENCES resume (resume_id) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -268,5 +284,69 @@ GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO apiuser;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO apiuser;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO apiuser;
+
+
+CREATE TABLE address (
+     address_id              serial NOT NULL,
+     address_1               varchar(255) NOT NULL,
+     address_2               varchar(255),
+     city                    varchar(92),
+     state                   varchar(92),
+     zip                     varchar(10) NOT NULL,
+     country                 varchar(2) NOT NULL DEFAULT 'US',
+     PRIMARY KEY (address_id)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    user_id                 serial NOT NULL,
+    first_name              varchar(92),
+    last_name               varchar(92),
+    login                   varchar(64),
+    passwd                  varchar(64),
+    email                   varchar(255),
+    PRIMARY KEY (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_detail (
+    user_id                 int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    phone                   varchar(24),
+    linkedin_url            varchar(255),
+    github_url              varchar(255),
+    website_url             varchar(255),
+    portfolio_url           varchar(255),
+    PRIMARY KEY (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_address (
+    user_id                 int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    address_id              int NOT NULL REFERENCES address (address_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    is_default              boolean NOT NULL DEFAULT true,
+    address_type            varchar(32) NOT NULL DEFAULT 'home',
+    PRIMARY KEY (user_id, address_id)
+);
+
+CREATE TABLE IF NOT EXISTS user_setting (
+    user_id                 int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    no_response_week        smallint NOT NULL DEFAULT 6,
+    docx2html               varchar(32) NOT NULL DEFAULT 'docx-parser-converter',
+    odt2html                varchar(32) NOT NULL DEFAULT 'pandoc',
+    pdf2html                varchar(32) NOT NULL DEFAULT 'markitdown',
+    html2docx               varchar(32) NOT NULL DEFAULT 'html4docx',
+    html2odt                varchar(32) NOT NULL DEFAULT 'pandoc',
+    html2pdf                varchar(32) NOT NULL DEFAULT 'weasyprint',
+    default_llm             varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+    resume_extract_llm      varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+	job_extract_llm         varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+	rewrite_llm             varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+	cover_llm               varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+    company_llm             varchar(32) NOT NULL DEFAULT 'gpt-5-search-api',
+    tools_llm               varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+    openai_api_key          varchar(192) DEFAULT NULL,
+    tinymce_api_key         varchar(64) DEFAULT NULL,
+    convertapi_key          varchar(64) DEFAULT NULL,
+    PRIMARY KEY (user_id)
+);
+
+
 
 
