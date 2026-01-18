@@ -2,14 +2,11 @@
 
 A comprehensive job tracking application built with a React frontend, FastAPI Python backend, and PostgreSQL database. 
 This full-stack application helps you manage job opportunities throughout the hiring process with features for tracking 
-applications, managing contacts, scheduling interviews, and organizing notes. It will also parse job descriptions and 
-extract keywords, then modify your resume to include the keywords that you've approved.  Cover letter writing is all 
-automated, with each catered to the job applied for.
+applications, managing contacts, scheduling interviews, and organizing notes. It also includes a number of AI assistance 
+for presenting your best self, which includes: resume rewriting tailored to job, cover letters, and researched 
+company reporting, resume feedback and tips and other tools. Highly customizable to suit your personal preference 
+and easily executed to be able to use all within a Docker stack.
 
-This application allows you to configure which language model you want to use for different processes, as well as which 
-conversion library to use for converting your resume (necessary for better interaction with the LLM's).  It also gives you 
-the option to use refined tools for editing, that do require a subscription, or using very basic free methods.  I hope 
-that you find this tool useful and that it helps you in finding your next big adventure with work.
 
 ## Features
 - Job posting tracking and organization through 4 universal stages
@@ -127,7 +124,7 @@ Service Subscriptions
 5. **Edit DNS Routing**
     ```bash
    # Skip this step for Windows and MacOS
-   echo "172.20.0.5      portal.jobtracknow.com
+   echo "172.20.0.5      jobtracknow.com
    172.20.0.10     api.jobtracknow.com
    172.20.0.15     psql.jobtracknow.com" >> /etc/hosts
    

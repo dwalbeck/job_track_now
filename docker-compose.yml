@@ -1,16 +1,15 @@
 services:
   # PostgreSQL Database Service
   db:
-    image: postgres:12
+    image: postgres:16
     container_name: psql.jobtracknow.com
-    hostname: psql.jobtracknow.com
     restart: always
     env_file:
       - ./job_track_now-api/.env
     expose:
       - "5432"
     volumes:
-      - /var/lib/postgresql-docker/12/main:/var/lib/postgresql/data
+      - /var/lib/postgresql-docker/16/main:/var/lib/postgresql/data
       - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -29,7 +28,6 @@ services:
       context: ./job_track_now-api
       dockerfile: Dockerfile
     container_name: api.jobtracknow.com
-    hostname: api.jobtracknow.com
     restart: unless-stopped
     env_file:
       - ./job_track_now-api/.env
@@ -63,8 +61,7 @@ services:
       dockerfile: Dockerfile
       args:
         REACT_APP_API_BASE_URL: https://api.jobtrackernow.com
-    container_name: portal.jobtracknow.com
-    hostname: portal.jobtracknow.com
+    container_name: jobtracknow.com
     restart: unless-stopped
     env_file:
       - ./job_track_now-portal/.env
@@ -89,7 +86,6 @@ services:
 
 # Named volumes for data persistence
 volumes:
-
   src:
     driver: local
   job_docs:
