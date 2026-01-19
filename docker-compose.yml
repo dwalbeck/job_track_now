@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database Service
   db:
-    image: postgres:16
+    image: postgres:12
     container_name: psql.jobtracknow.com
     restart: always
     env_file:
@@ -9,7 +9,7 @@ services:
     expose:
       - "5432"
     volumes:
-      - /var/lib/postgresql-docker/16/main:/var/lib/postgresql/data
+      - /var/lib/postgresql-docker/12/main:/var/lib/postgresql/data
       - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
