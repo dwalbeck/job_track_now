@@ -39,12 +39,12 @@ The Job Tracker is built as a **3-tier containerized application**:
 
 ### **Frontend Service** (React + Nginx)
 - **Technology**: React 18 with TypeScript-style components
-- **Features**: Responsive UI, real-time search, drag-and-drop job management
-- **URL**: http://portal.jobtracknow.com or http://localhost
+- **Features**: Responsive UI, real-time search, drag-and-drop job management, OAuth2 sessions
+- **URL**: https://jobtracknow.com or http://localhost
 - **Purpose**: User interface for interacting with job data
 
 ### **Backend Service** (FastAPI + Python)
-- **Technology**: FastAPI with SQLAlchemy ORM
+- **Technology**: Python 3.10 using FastAPI with SQLAlchemy ORM
 - **Features**: RESTful API, automatic documentation, data validation
 - **URL**: http://api.jobtracknow.com or http://localhost:8000
 - **Purpose**: Business logic and database operations
@@ -85,20 +85,20 @@ Service Subscriptions
 
 1. **Clone the Repository**
    ```bash
-   git clone git@github.com:dwalbeck/job_tracker.git
-   cd job_tracker
+   git clone git@github.com:dwalbeck/job_track_now.git
+   cd job_track_now
    ```
 
 2. **Configure Environment Variables**
    ```bash
-   cp ./backend/.env.example ./backend/.env
-   cp ./frontend/.env.example ./frontend/.env
+   cp ./job_track_now-api/.env.example ./job_track_now-api/.env
+   cp ./job_track_now-portal/.env.example ./job_track_now-portal/.env
    # Edit .env files with the settings you want
    ```
 3. **Customize Configuration**
     ```bash
    # Use your preferred editor to add/change settings
-   vim ./backend/.env
+   vim ./job_track_now-api//.env
    
    # Windows and MacOS users need to change to the following:
    DATABASE_URL=postgresql://apiuser:change_me@db:5432/jobtracker
@@ -107,7 +107,7 @@ Service Subscriptions
    # Make sure to add your OpenAI API key
    OPENAI_API_KEY=change_this_to_your_key
    
-   vim ./frontend/.env
+   vim ./job_track_now-portal/.env
    
    # Windows and MacOS users make the following change:
    REACT_APP_API_BASE_URL=http://localhost:8000
@@ -136,15 +136,15 @@ Service Subscriptions
    docker compose ps
    
    # You should see the following:
-   api.jobtracknow.com      job_tracker-backend    "python -m uvicorn a…"   backend    18 minutes ago   Up 18 minutes (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
-   portal.jobtracknow.com   job_tracker-frontend   "/usr/local/bin/dock…"   frontend   18 minutes ago   Up 18 minutes (healthy)   443/tcp, 0.0.0.0:80->80/tcp, [::]:80->80/tcp, 3000/tcp
+   api.jobtracknow.com      job_track_now-backend    "python -m uvicorn a…"   backend    18 minutes ago   Up 18 minutes (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+   portal.jobtracknow.com   job_track_now-frontend   "/usr/local/bin/dock…"   frontend   18 minutes ago   Up 18 minutes (healthy)   443/tcp, 0.0.0.0:80->80/tcp, [::]:80->80/tcp, 3000/tcp
    psql.jobtracknow.com     postgres:12            "docker-entrypoint.s…"   db         18 minutes ago   Up 18 minutes (healthy)   5432/tcp
    ```
 
 7. **Access the Application**
-   - **Frontend**: http://portal.jobtracknow.com
-   - **Backend API**: http://api.jobtracknow.com
-   - **API Documentation**: http://api.jobtracknow.com/docs
+   - **Frontend**: https://jobtracknow.com
+   - **Backend API**: https://api.jobtracknow.com
+   - **API Documentation**: https://api.jobtracknow.com/docs
    - **Database**: postgresql://apiuser:change_me@psql.jobtracknow.com:5432/jobtracker
 
     or for Windows and MacOS use:
@@ -167,14 +167,21 @@ page, but you could skip reading the rest and still be able to operate things.
 
 ### First Steps
 
-* You should fill in your personal information before doing anything, as that information is used in file naming and for 
-    document creation.  This is done by selecting the **Personal** left side navigation option. Custom configurations and 
-    API keys for various extended features are also configured on this same page.
-* You'll need to upload a baseline resume, which can be formatted as odt, docx, pdf or html, although I strongly suggestion 
-  that your format it as docx.  A baseline resume is the starting point, which is modified to cater to a job posting. 
-  You can create a baseline resume by selecting the **Resume** menu option in the left side navigation menu.
+* Upon first starting up the application, your DB will be empty and you won't be able to login.  So creating a new user 
+    account is pretty simple. On the left side menu at the bottom you'll see **Settings**, where you'll move your mouse 
+    cursor to be, and then select **User** from the sub-menu.
+* Once you create a user, you will no longer be able to access this page without being logged in, so make sure you at the 
+    bare minimum fill in the **username** and **password** fields.
+* You should now be able to login using the credentials that you defined in your profile.
+* Many pages and features are dependent upon having a valid OpenAI AI key, so in the **Settings** sub-menu click on
+  **General** and be sure to add your OpenAI API Key.  Optionally you can add other keys for upgraded capabilities as well.
+* Next you'll need to upload your current resume (referred to as a baseline resume), which can be formatted as odt, docx, 
+  pdf or html. The formatting of my resume worked best as docx, but this will be dependent on how yours is formatted.
+  A baseline resume is the starting point, which is then modified to cater to a job posting. 
+      You can create a baseline resume by selecting the **Resume** menu option in the left side navigation menu.
 * While not required, I recommend editing your converted resume (which will be HTML formatted) to insure 
   that it is styled the way you want.
+* You are now ready to start adding Job Postings, which is pretty straight forward, and your off to the races.
 
 ### Job Posting
 
@@ -232,11 +239,6 @@ all the records from the DB, for whatever reason.  You can do this by clicking o
 the top right of the page and then selecting the export option.  This will dump the DB contents to a CSV file that will 
 automatically start downloading upon selection.
 
-In the **Personal** section, you can customize a few things.  There is the **Auto Status Change** setting, which is 
-the number of weeks of no contact before a job card is moved to the "No Response" column. You also have the fields 
-**Job Extraction LLM**, **Resume Rewrite LLM** and **Cover Letter LLM** - where you can specify which OpenAI LLM model 
-to use for that action.
-
 
 ## 📋 Service Details
 
@@ -261,7 +263,7 @@ to use for that action.
 - Resume customization and management
 - Cover letter generation
 
-### ⚙️ Backend Service (`job_tracker_backend`)
+### ⚙️ Backend Service (`job_track_now-backend`)
 
 **What it does:**
 - Provides RESTful API endpoints for all data operations
@@ -274,16 +276,6 @@ to use for that action.
 3. **ORM Operations**: SQLAlchemy manages database interactions
 4. **File Management**: Creates job-specific directories for documents
 5. **Nginx**: Web server reverse proxy
-
-**API Endpoints:**
-- **Jobs**: CRUD operations for job tracking
-- **Contacts**: Contact management with job relationships
-- **Calendar**: Interview scheduling and appointment management
-- **Notes**: Job-related notes and documentation
-- **Resume**: Resume baselines and job specific rewrites
-- **Letter**: Cover letter management for applications
-- **Convert**: Handles conversions of file formatting
-- **Export**: Data exporter dumping the DB
 
 ### 🗄️ Database Service (`job_tracker_db`)
 

@@ -264,6 +264,8 @@ CREATE TABLE IF NOT EXISTS oauth_codes (
     code_challenge_method   VARCHAR(10) NOT NULL DEFAULT 'S256',
     state                   VARCHAR(255) NOT NULL,
     scope                   VARCHAR(255) NOT NULL DEFAULT 'all',
+    user_id                 INT,
+    is_admin                BOOLEAN NOT NULL DEFAULT false,
     created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     used                    BOOLEAN NOT NULL DEFAULT FALSE,
     used_at                 TIMESTAMP NULL
@@ -277,39 +279,33 @@ ALTER TABLE job
     ADD CONSTRAINT job_resume_fk FOREIGN KEY (resume_id) REFERENCES resume (resume_id) ON DELETE SET NULL ON UPDATE CASCADE,
     ADD CONSTRAINT job_cover_fk FOREIGN KEY (cover_id) REFERENCES cover_letter (cover_id) ON DELETE SET NULL ON UPDATE CASCADE;
 
-ALTER ROLE apiuser WITH PASSWORD 'change_me';
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO apiuser;
-GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO apiuser;
-
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO apiuser;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO apiuser;
-
 
 CREATE TABLE address (
-     address_id              serial NOT NULL,
-     address_1               varchar(255) NOT NULL,
-     address_2               varchar(255),
-     city                    varchar(92),
-     state                   varchar(92),
-     zip                     varchar(10) NOT NULL,
-     country                 varchar(2) NOT NULL DEFAULT 'US',
-     PRIMARY KEY (address_id)
+    address_id              serial NOT NULL,
+    address_1               varchar(255) NOT NULL,
+    address_2               varchar(255),
+    city                    varchar(92),
+    state                   varchar(92),
+    zip                     varchar(10) NOT NULL,
+    country                 varchar(2) NOT NULL DEFAULT 'US',
+    UNIQUE (address_1, address_2, city, state, zip),
+    PRIMARY KEY (address_id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
     user_id                 serial NOT NULL,
-    first_name              varchar(92),
-    last_name               varchar(92),
-    login                   varchar(64),
-    passwd                  varchar(64),
-    email                   varchar(255),
+    first_name              varchar(92) NOT NULL,
+    last_name               varchar(92) NOT NULL,
+    login                   varchar(64) NOT NULL,
+    passwd                  varchar(64) NOT NULL,
+    email                   varchar(255) NOT NULL,
+    is_admin                boolean NOT NULL DEFAULT false,
     PRIMARY KEY (user_id)
 );
 
 CREATE TABLE IF NOT EXISTS user_detail (
     user_id                 int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    phone                   varchar(24),
+    phone                   varchar(24) NOT NULL,
     linkedin_url            varchar(255),
     github_url              varchar(255),
     website_url             varchar(255),
@@ -334,13 +330,13 @@ CREATE TABLE IF NOT EXISTS user_setting (
     html2docx               varchar(32) NOT NULL DEFAULT 'html4docx',
     html2odt                varchar(32) NOT NULL DEFAULT 'pandoc',
     html2pdf                varchar(32) NOT NULL DEFAULT 'weasyprint',
-    default_llm             varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+    default_llm             varchar(32) NOT NULL DEFAULT 'gpt-4o-mini',
     resume_extract_llm      varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
 	job_extract_llm         varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
-	rewrite_llm             varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+	rewrite_llm             varchar(32) NOT NULL DEFAULT 'gpt-5.2',
 	cover_llm               varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
-    company_llm             varchar(32) NOT NULL DEFAULT 'gpt-5-search-api',
-    tools_llm               varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
+    company_llm             varchar(32) NOT NULL DEFAULT 'gpt-5.2',
+    tools_llm               varchar(32) NOT NULL DEFAULT 'gpt-4o-mini',
     openai_api_key          varchar(192) DEFAULT NULL,
     tinymce_api_key         varchar(64) DEFAULT NULL,
     convertapi_key          varchar(64) DEFAULT NULL,
@@ -348,5 +344,11 @@ CREATE TABLE IF NOT EXISTS user_setting (
 );
 
 
+ALTER ROLE apiuser WITH PASSWORD 'change_me';
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO apiuser;
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO apiuser;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO apiuser;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO apiuser;
 

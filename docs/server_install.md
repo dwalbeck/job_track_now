@@ -98,7 +98,7 @@ visudo
     deploy  ALL=NOPASSWD: /usr/bin/systemctl restart personal_api.service, /usr/sbin/service nginx restart, /usr/bin/systemctl restart jobtracknow-api.service, /usr/bin/systemctl status jobtracknow-api.service
 ```
 
-#### Create Systemd Services
+### Create Systemd Services
 ```bash
 cd /etc/systemd/system
 vi personal_api.service
@@ -187,16 +187,30 @@ PrivateTmp=true
 WantedBy=multi-user.target
 ```
 
+And now activate both services
+
 ```bash
 systemctl daemon-reload
 systemctl enable jobtracknow-api
 systemctl enable personal_api.service
+```
 
+### Python Setup
+
+First we need to install all the packages that the code is dependent upon and setup the virtual environment
+
+```bash
 su - deploy
 cd /var/www/job_api
 python3 -m venv venv/
-vi requirements.txt
+
+cd /var/www/personal_api
+python3 -m venv venv/
+
+vi /var/www/job_api/requirements.txt
 ```
+
+Insure the following content is up to date with the actual requirements.txt file
 
 ```text
 fastapi==0.104.1
@@ -226,13 +240,40 @@ pytest-asyncio==0.21.1
 pytest-mock==3.12.0
 ```
 
-```bash
-pip install -r requirements.txt
+vi /var/www/personal_api/requirements.txt
 
-cd /etc/nginx/sites-available
+```text
+asyncpg>=0.30.0
+fastapi>=0.115.12
+gunicorn>=23.0.0
+loguru>=0.7.3
+openai>=1.75.0
+pgvector>=0.4.0
+python-dotenv>=1.1.0
+python-multipart>=0.0.6
+uvicorn>=0.34.2
 ```
 
-vi api.jobtracknow.net
+Now install the packages
+
+```bash
+su - deploy
+cd /var/www/job_api
+source venv/bin/activate
+pip install -r requirements.txt
+exit
+
+su - deploy
+cd /var/www/personal_api
+source venv/bin/activate
+pip install -r requirements.txt
+exit
+```
+
+### Nginx Configuration
+
+`vi /etc/nginx/sites-available/api.jobtracknow.net`
+
 ```nginx configuration
 server {
     listen 80;
@@ -251,7 +292,7 @@ server {
 }
 ```
 
-vi daveywalbeck.com
+`vi /etc/nginx/sites-available/daveywalbeck.com`
 ```nginx configuration
 server {
     listen 80 default_server;
@@ -310,7 +351,7 @@ server {
 }
 ```
 
-vi jobtracknow.net
+`vi /etc/nginx/sites-available/jobtracknow.net`
 ```nginx configuration
 server {
     listen 80;
@@ -371,7 +412,7 @@ server {
 }
 ```
 
-vi ps-api.daveywalbeck.com
+`vi /etc/nginx/sites-available/ps-api.daveywalbeck.com`
 ```nginx configuration
 server {
     listen 80;
@@ -406,8 +447,11 @@ server {
 }
 ```
 
+Now activate the virtual website configurations
+
 ```bash
 cd /etc/nginx/sites-enabled
+rm default
 ln -sn /etc/nginx/sites-available/api.jobtracknow.net
 ln -sn /etc/nginx/sites-available/daveywalbeck.com
 ln -sn /etc/nginx/sites-available/jobtracknow.net

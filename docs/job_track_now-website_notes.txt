@@ -1,5 +1,13 @@
 # ===== Job Track Now Website notes =============================================================================
 
+Todo
+    - contacts  - include all letters of the alphabet stacked vertically on the right side, for each jumping to names starting with that letter
+    - job list  - calendar appointments disappear on the day they are due. have them additionally show the time of the appointment.
+    - documents - each document summary card should be clickable on the company name, which should redirect to viewing the document
+
+
+# ------------------------------------------------------
+
 Homepage
 features
 screenshots
@@ -14,4 +22,12 @@ contact
   
     
     
-  
+
+
+
+
+
+
+
+
+
