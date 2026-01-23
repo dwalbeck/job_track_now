@@ -91,35 +91,35 @@ Service Subscriptions
 
 2. **Configure Environment Variables**
    ```bash
-   cp ./job_track_now-api/.env.example ./job_track_now-api/.env
-   cp ./job_track_now-portal/.env.example ./job_track_now-portal/.env
-   # Edit .env files with the settings you want
+   cp ./job_track_now-api/env.example ./job_track_now-api/.env
+   cp ./job_track_now-portal/env.example ./job_track_now-portal/.env
+   # for Windows and Mac users
+   cp ./job_track_now-api/env.example-win ./job_track_now-api/.env
+   cp ./job_track_now-portal/env.example-win ./job_track_now-portal/.env
    ```
 3. **Customize Configuration**
-    ```bash
-   # Use your preferred editor to add/change settings
-   vim ./job_track_now-api//.env
-   
-   # Windows and MacOS users need to change to the following:
-   DATABASE_URL=postgresql://apiuser:change_me@db:5432/jobtracker
-   POSTGRES_HOST=db 
-   
-   # Make sure to add your OpenAI API key
-   OPENAI_API_KEY=change_this_to_your_key
-   
-   vim ./job_track_now-portal/.env
-   
-   # Windows and MacOS users make the following change:
-   REACT_APP_API_BASE_URL=http://localhost:8000
-   ```
+
+    Use your preferred text editor to modify the settings to your preference.  Everything is setup to simply work for
+    your OS based on which env.example file you used.  Changing URL's, DB name, DB user, DB password can potentially 
+    break things, so make sure it's worth it and that you understand how to fix things should things go bad.  Remember, 
+    you can also change any setting you want later at any time as well.
 
 4. **Build and Start All Services**
    ```bash
-   # Linux production setup
+   # To both build the services are start them
    docker compose up --build -d
 
+   # Or you can do my preference, which is build then start
+   docker compose build
+   docker compose up -d
+   
    # Or for Windows OS and MacOS
-   docker compose -f docker-compose-win.yml up --build
+   docker compose -f docker-compose-win.yml up --build -d
+   
+   # or separately
+   docker compose -f docker-compose-win.yml build
+   docker compose -f docker-compose-win.yml up -d
+   
    ```
 5. **Edit DNS Routing**
     ```bash
@@ -138,25 +138,37 @@ Service Subscriptions
    # You should see the following:
    api.jobtracknow.com      job_track_now-backend    "python -m uvicorn a…"   backend    18 minutes ago   Up 18 minutes (healthy)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
    portal.jobtracknow.com   job_track_now-frontend   "/usr/local/bin/dock…"   frontend   18 minutes ago   Up 18 minutes (healthy)   443/tcp, 0.0.0.0:80->80/tcp, [::]:80->80/tcp, 3000/tcp
-   psql.jobtracknow.com     postgres:12            "docker-entrypoint.s…"   db         18 minutes ago   Up 18 minutes (healthy)   5432/tcp
-   ```
+   psql.jobtracknow.com     postgres:12              "docker-entrypoint.s…"   db         18 minutes ago   Up 18 minutes (healthy)   5432/tcp
+   ``` 
+    The key thing to note in all that output, is the column that states the current status, run time and health check, 
+    which looks like: **Up 18 minutes (healthy)**
+
 
 7. **Access the Application**
    - **Frontend**: https://jobtracknow.com
    - **Backend API**: https://api.jobtracknow.com
    - **API Documentation**: https://api.jobtracknow.com/docs
    - **Database**: postgresql://apiuser:change_me@psql.jobtracknow.com:5432/jobtracker
-
+     - host: psql.jobtracknow.com
+     - user: apiuser
+     - password: change_me
+     - port: 5432
+     - database: jobtracker
+     
     or for Windows and MacOS use:
    - **Frontend**: http://localhost (preferred) or http://localhost:3000
    - **Backend API**: http://localhost:8000
    - **API Documentation**: http://localhost:8000/docs
    - **Database**: postgresql://apiuser:change_me@localhost:5432/jobtracker
-   
+     - host: localhost
+     - user: apiuser
+     - password: change_me
+     - port: 5432
+     - database: jobtracker
 
 NOTE: For **Windows** and **Mac** users, network interfaces work a bit differently then they do on Linux, and as such are not 
 able to do aliasing or virtual addressing, which is used by Docker for some networking capabilities.  The short version 
-is that this means you can't use a fake domain name for accessing things.  No biggie, just use the correct port and 
+is that this means you can't use a fake domain name for accessing things.  No biggie, just use the correct mapped port and 
 the domain name **localhost**.
 
 ## 🔄 Usage
@@ -242,17 +254,25 @@ automatically start downloading upon selection.
 
 ## 📋 Service Details
 
-### 🖥️ Frontend Service (`job_tracker_frontend`)
+### 🖥️ Frontend Service (`job_track_now-frontend`)
 
 **What it does:**
-- Serves the React application through Nginx
+- Serves the React application through the reverse proxy Nginx (Linux only)
+- Application is ran by using uvicorn with 4 workers on port 3000 (Windows and Mac)
 - Provides the user interface for all job tracking features
 - Handles client-side routing and state management
+- Manages authentication and validation
 
 **How it works:**
-1. **Build Stage**: Compiles React app with optimizations
-2. **Serve Stage**: Nginx serves static files with compression and caching
-3. **Communication**: Makes HTTP requests to backend API proxied through nginx
+- For Linux users, the frontend uses the encrypted HTTPS layer and a fake domain using self-signed certificates. The website 
+    is accessed directly through Nginx, which simply points to the compiled files that are served up. Communication 
+    is done through HTTPS requests from the frontend application to the backend API, which can also connect to the DB and 
+    provides all the data and logic
+- For Windows and Mac users, the frontend runs using the React web server, which run on port 3000.  This port is mapped to
+    port 80 on your host machine so that it can be accessed without specifying the port.  It communicates with the backend 
+    API service directly from the running Python service using port 8000. Port 8000 is also mapped to the host machine using 
+    the same port 8000.  This is necessary for the web application, which is used on the host machine and therefore doesn't 
+    have access to Docker networking, to be able to route to the backend.
 
 **Key Features:**
 - Job management with drag-and-drop interface
@@ -262,6 +282,7 @@ automatically start downloading upon selection.
 - Real-time search and filtering
 - Resume customization and management
 - Cover letter generation
+- Company research report generation and interview tips
 
 ### ⚙️ Backend Service (`job_track_now-backend`)
 
@@ -269,13 +290,16 @@ automatically start downloading upon selection.
 - Provides RESTful API endpoints for all data operations
 - Handles business logic and data validation
 - Manages database connections and transactions
+- Enforces authentication and validation for session management
 
 **How it works:**
-1. **Database Wait**: Waits for PostgreSQL to be ready before starting
-2. **API Server**: FastAPI serves endpoints with automatic validation
-3. **ORM Operations**: SQLAlchemy manages database interactions
-4. **File Management**: Creates job-specific directories for documents
-5. **Nginx**: Web server reverse proxy
+- For Linux users, the API service is ran using uvicorn on port 7080.  It also has Nginx setup as a reverse proxy that 
+    handles the fake domain name routing, as well as the SSL certificate, enabling all communications to be done over 
+    HTTPS.  
+- For Windows and Mac users, the API service is accessed directly from the uvicorn process running on port 7080.
+- Common use on both setups is that it's able to connect to the DB and manages all data interactions.  It also can connect 
+  to the OpenAI API to make requests to their large language models to have directed work completed.  All requests return 
+    the necessary data back to the frontend, where it is then organized and displayed for consumption.
 
 ### 🗄️ Database Service (`job_tracker_db`)
 
@@ -283,6 +307,7 @@ automatically start downloading upon selection.
 - Stores all application data in PostgreSQL tables
 - Provides ACID compliance for data integrity
 - Handles complex queries and relationships
+- Referenced across multi-stage OAuth2 workflow
 
 **How it works:**
 1. **Initialization**: Automatically runs schema.sql on first startup
@@ -290,9 +315,12 @@ automatically start downloading upon selection.
 3. **Connections**: Accepts connections from backend service and is mapped to localhost:5432
 
 
-## 🔄 Service Communication Flow
+## 🔄 Operational Flow
 
-See flow chart in located in **docs/job_tracker-communication_flow.pdf**
+See flow charts for a deeper dive 
+- General communication flow: docs/flow/communication_flow.pdf
+- Resume rewrite flow: docs/flow/resume_rewrite_flow.pdf
+- New baseline resume flow: docs/flow/add_new_baseline_resume.pdf
 
 
 ## 📊 Monitoring and Health Checks
@@ -316,9 +344,13 @@ docker-compose logs -f
 
 ### Health Endpoints
 
+Linux
+- **Backend Health**: https://api.jobtracknow.com/health
+- **Frontend Health**: https://jobtracknow.com (returns React app)
+
+Windows/Mac
 - **Backend Health**: http://localhost:8000/health
 - **Frontend Health**: http://localhost:3000 (returns React app)
-- **Database Health**: Automatic Docker health check
 
 ## 🔧 Configuration Options
 
@@ -329,49 +361,54 @@ Create a `.env` file to customize:
 ```bash
 # Database Configuration
 DATABASE_URL=postgresql://apiuser:change_me@psql.jobtracknow.com:5432/jobtracker
-POSTGRES_HOST=psql.jobtracknow.com
-POSTGRES_PASSWORD=change_me
-POSTGRES_USER=apiuser
-POSTGRES_DB=jobtracker
-POSTGRES_PORT=5432
-PGDATA=/var/lib/postgresql/data
-POSTGRES_HOST_AUTH_METHOD=password
+POSTGRES_HOST=psql.jobtracknow.com              # database host to connect to
+POSTGRES_PASSWORD=change_me                     # database password part of credentials
+POSTGRES_USER=apiuser                           # database user/role to connect as
+POSTGRES_DB=jobtracker                          # name of the database to connect to
+POSTGRES_PORT=5432                              # the port used to establish the connection
+PGDATA=/var/lib/postgresql/data                 # path for the main postgresql data storage
+POSTGRES_HOST_AUTH_METHOD=password              # password method to use for authentication
 
 # Application Configuration
-APP_NAME=Job Tracker API
-APP_VERSION=1.0.0
-DEBUG=True
+APP_NAME=Job Track Now                          # name of the application
+APP_VERSION=1.0.0                               # application version
+DEBUG=True                                      # not really used
 
 # File Storage Configuration
-BASE_JOB_FILE_PATH=/app/job_docs
-RESUME_DIR=/app/job_docs/resumes
-COVER_LETTER_DIR=/app/job_docs/cover_letters
-EXPORT_DIR=/app/job_docs/export
-LOGO_DIR=/app/job_docs/logo
-REPORT_DIR=/app/job_docs/report
+BASE_JOB_FILE_PATH=/app/job_docs                # defines the full path where job docs are stored
+RESUME_DIR=/app/job_docs/resumes                # defines the full path where resumes are written to
+COVER_LETTER_DIR=/app/job_docs/cover_letters    # defines the full path where cover letters are saved to
+EXPORT_DIR=/app/job_docs/export                 # defines the full path for DB export dump file
+LOGO_DIR=/app/job_docs/logo                     # defines the full path where company logos are save (not used anymore)
+REPORT_DIR=/app/job_docs/report                 # defines the full path where reports are saved to for download purposes
 
 # Logging Configuration
-LOG_LEVEL=DEBUG
-LOG_FILE=api.log
+LOG_LEVEL=DEBUG                                 # defines the level at which logs are recorded
+LOG_FILE=api.log                                # filename for the log file
+
+BACKEND_URL=http://localhost:8000               # URL used to call the backend API
+JWT_SECRET_KEY=<random_key>                     # Random static string used with encryptions
 
 # CORS Configuration
-ALLOWED_ORIGINS=["http://localhost:3000", "http://portal.jobtracknow.com:3000"]
+ALLOWED_ORIGINS=["http://localhost:3000", "http://portal.jobtracknow.com:3000"]   # applied for CORS enforcement
 
 # AI Configuration
-AI_MODEL=gpt-4o-mini
-OPENAI_PROJECT=<open_ai_project_name>
+OPENAI_PROJECT=<open_ai_project_name>           # OpenAI project name
 ```
 
 ### Frontend Environment Variables
 
 ```bash
 # API Configuration
-REACT_APP_API_BASE_URL=http://api.jobtracknow.com
+REACT_APP_API_BASE_URL=http://api.jobtracknow.com                     # backend API URL for access
 
 # Logging Configuration
-REACT_APP_LOG_LEVEL=DEBUG
-REACT_APP_LOG_FILE=portal.log
-REACT_APP_ENABLE_CONSOLE_LOGGING=true
+REACT_APP_LOG_LEVEL=DEBUG                                             # level to use for logging
+REACT_APP_LOG_FILE=portal.log                                         # name of the log file
+REACT_APP_ENABLE_CONSOLE_LOGGING=true                                 # whether to enable console logging
+
+REACT_APP_FRONTEND_BASE_URL=https://jobtracknow.com                   # URL for the frontend application
+REACT_APP_OAUTH_REDIRECT_CALLBACK=https://jobtracknow.com/callback    # URL used during the OAuth2 flow
 
 NODE_ENV=production
 ```
@@ -380,15 +417,21 @@ NODE_ENV=production
 ## 🗂️ Data Persistence
 
 ### Volumes
-
-- **postgres_data**: Database files persist across container restarts
-- **job_docs**: Job-specific document directories
+- **postgresql**: For Linux users, a directory is mounted and bound to the directory **/var/lib/postgresql-docker/16/data** 
+    where the actual DB files are written to.  This acts identical to how PostgreSQL would run if installed locally.  
+    Windows and Mac users, use a managed Docker volume that is allocated and managed by Docker.  Both of these actions 
+    enable data saved to the DB to persist across starts and stopping of the DB and stack.
+- **job_docs**: Mounts to a local directory for saving job-specific documents and files.  The files saved there remain 
+    accessible after the Docker stack is stopped.
+- **timezone**: Linux users additionally share configurations for timezone settings, which is bound into each container, 
+    so that all the containers (servers) are in sync and use the same timezone.  Otherwise UTC is the default, and your 
+    browser operates from localtime - meaning if you don't live exactly on Greenwich mean time, then there is an offset difference.
 
 ### Backup and Restore
 
 ```bash
 # Backup
-docker compose exec db pg_dump -U apiuser job_tracker > backup.sql
+docker compose exec db pg_dump -U apiuser --inserts jobtracker > backup.sql
 
 # Restore
 docker compose exec -T db psql -U apiuser job_tracker < backup.sql
@@ -619,26 +662,10 @@ docker-compose exec db pg_isready -U apiuser
 
 - Database password should be changed from default
 - Backend runs as non-root user
-- Frontend uses security headers via Nginx
+- Frontend / Backend uses security headers via Nginx
 - CORS is configured for specific origins only
+- OAuth2 authorization code flow used with JWT tokens
 
-## 🎯 Production Deployment
-
-For production deployment:
-
-1. **Update Environment Variables**
-   - Change database password
-   - Set DEBUG=false
-   - Configure proper CORS origins
-
-2. **Use Production Compose File**
-   ```bash
-   docker-compose -f docker-compose.yml up -d
-   ```
-
-3. **Set up Reverse Proxy**
-   - Use Nginx or similar for SSL termination
-   - Configure domain names and certificates
 
 ## 📄 License
 
