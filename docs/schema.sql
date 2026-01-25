@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS note (
     job_id                  int NOT NULL REFERENCES job (job_id) ON DELETE CASCADE ON UPDATE CASCADE,
     note_title              varchar(255),
     note_content            text,
+    communication_type      comm DEFAULT NULL,
     note_score              smallint DEFAULT NULL,
     note_active             boolean NOT NULL DEFAULT true,
     note_created            timestamp(0) without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,

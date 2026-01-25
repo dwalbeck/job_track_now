@@ -67,6 +67,9 @@ apt-get install -y build-essential \
 mkdir -p /var/log/archive
 mkdir -p /var/log/nginx/archive
 
+# set timezone to be matched with local
+timedatectl set-timezone MST7MDT
+
 vi /etc/vim/vimrc
     set tabstop=4
 
