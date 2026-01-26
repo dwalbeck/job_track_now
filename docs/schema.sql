@@ -264,6 +264,7 @@ CREATE TABLE IF NOT EXISTS document (
 
 CREATE TABLE IF NOT EXISTS process (
     process_id              serial NOT NULL,
+    user_id                 int REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CADCADE,
     endpoint_called         varchar(128),
     running_method          varchar(64),
     running_class           varchar(64),
