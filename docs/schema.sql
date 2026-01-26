@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS note (
     note_id                 serial NOT NULL,
     user_id                 int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
     job_id                  int NOT NULL REFERENCES job (job_id) ON DELETE CASCADE ON UPDATE CASCADE,
-    note_title              varchar(255),
+    note_title              varchar(255) NOT NULL,
     note_content            text,
     communication_type      comm DEFAULT NULL,
     note_score              smallint DEFAULT NULL,
