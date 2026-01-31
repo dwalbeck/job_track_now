@@ -20,13 +20,6 @@ documentation
 contact
     simple contact form that will send email to my address
   
-    
-    
-These are strange times and AI has made a big impact in the hiring process for software engineer positions. Every company posting an open position receives thousands of applicants, due to so many job hunting services that use AI to rewrite resumes and do mass submissions.  Often this results in completely unqualified candidates submitted with false information and incapable of doing the job posted.  So companies have had to adapt to handle processing through all of the noise to find the real talent, which is also done using AI tools and ATS keyword matching.  If your looking for a tool that
-
-
-
-
 
 
 
