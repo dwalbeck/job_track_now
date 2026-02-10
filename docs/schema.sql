@@ -77,6 +77,9 @@ CREATE TABLE IF NOT EXISTS user_setting (
     cover_llm               varchar(32) NOT NULL DEFAULT 'gpt-4.1-mini',
     company_llm             varchar(32) NOT NULL DEFAULT 'gpt-5.2',
     tools_llm               varchar(32) NOT NULL DEFAULT 'gpt-4o-mini',
+    culture_llm             varchar(32) NOT NULL DEFAULT 'gpt-4o-mini',
+    question_llm            varchar(32) NOT NULL DEFAULT 'gpt-4o-mini',
+    stt_llm                 varchar(32) NOT NULL DEFAULT 'gpt-4o-mini-transcribe',
     openai_api_key          varchar(192) DEFAULT NULL,
     tinymce_api_key         varchar(64) DEFAULT NULL,
     convertapi_key          varchar(64) DEFAULT NULL,
@@ -289,6 +292,7 @@ CREATE TABLE IF NOT EXISTS company (
     job_id                  int NOT NULL REFERENCES job (job_id) ON DELETE CASCADE ON UPDATE CASCADE,
     report_active           boolean NOT NULL DEFAULT true,
     report_html             text DEFAULT NULL,
+    culture_report          text DEFAULT NULL,
     report_created          timestamp(0) WITHOUT TIME ZONE DEFAULT NULL,
     company_created         timestamp(0) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (job_id),
@@ -309,17 +313,52 @@ CREATE TABLE IF NOT EXISTS oauth_codes (
     used                    BOOLEAN NOT NULL DEFAULT FALSE,
     used_at                 TIMESTAMP NULL
 );
-
 CREATE INDEX IF NOT EXISTS idx_oauth_codes_created_at ON oauth_codes(created_at);
 CREATE INDEX IF NOT EXISTS idx_oauth_codes_username ON oauth_codes(username);
+
+CREATE TABLE IF NOT EXISTS interview (
+    interview_id            serial NOT NULL,
+    user_id                 int NOT NULL REFERENCES users (user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    job_id                  int NOT NULL REFERENCES job (job_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    company_id              int NOT NULL REFERENCES company (company_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    interview_score         smallint NOT NULL DEFAULT 0,
+    summary_report          text,
+    interview_feedback      text,
+    hiring_decision         varchar(255),
+    interview_created       timestamp(0) WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (interview_id)
+);
+
+CREATE TABLE IF NOT EXISTS question (
+    question_id             serial NOT NULL,
+    interview_id            int NOT NULL REFERENCES interview (interview_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    parent_question_id      int DEFAULT NULL REFERENCES question (question_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    question_order          smallint NOT NULL DEFAULT 0,
+    category                varchar(255),
+    question                text NOT NULL,
+    sound_file              varchar(255),
+    response_audio_file     varchar(128),
+    response_statement      text,
+    answer                  text,
+    answer_note             text NOT NULL,
+    completeness            smallint NOT NULL DEFAULT 0,
+    correctness             smallint NOT NULL DEFAULT 0,
+    insight                 smallint NOT NULL DEFAULT 0,
+    clarity                 smallint NOT NULL DEFAULT 0,
+    understanding           smallint NOT NULL DEFAULT 0,
+    answer_score            smallint NOT NULL DEFAULT 0,
+    bonus                   smallint NOT NULL DEFAULT 0,
+    feedback_note           text,
+    UNIQUE (interview_id, question_order),
+    PRIMARY KEY (question_id)
+);
+
+
 
 
 ALTER TABLE job
     ADD CONSTRAINT job_resume_fk FOREIGN KEY (resume_id) REFERENCES resume (resume_id) ON DELETE SET NULL ON UPDATE CASCADE,
     ADD CONSTRAINT job_cover_fk FOREIGN KEY (cover_id) REFERENCES cover_letter (cover_id) ON DELETE SET NULL ON UPDATE CASCADE;
-
-
-
 
 
 ALTER ROLE apiuser WITH PASSWORD 'change_me';
