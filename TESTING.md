@@ -787,21 +787,21 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          cache-dependency-path: job_track_now-portal/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./frontend
+        working-directory: ./job_track_now-portal
         run: npm ci
 
       - name: Run tests with coverage
-        working-directory: ./frontend
+        working-directory: ./job_track_now-portal
         run: npm test -- --coverage --watchAll=false --ci
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./frontend/coverage/lcov.info
-          flags: frontend
+          files: ./job_track_now-portal/coverage/lcov.info
+          flags: job_track_now-portal
           name: frontend-coverage
 
       - name: Archive test results
@@ -810,8 +810,8 @@ jobs:
         with:
           name: frontend-test-results
           path: |
-            frontend/coverage/
-            frontend/test-results/
+            job_track_now-portal/coverage/
+            job_track_now-portal/test-results/
           retention-days: 30
 
   backend-tests:
@@ -842,7 +842,7 @@ jobs:
         with:
           python-version: '3.12'
           cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
+          cache-dependency-path: job_track_now-api/requirements.txt
 
       - name: Install system dependencies
         run: |
@@ -850,7 +850,7 @@ jobs:
           sudo apt-get install -y pandoc texlive-latex-base texlive-fonts-recommended
 
       - name: Install Python dependencies
-        working-directory: ./backend
+        working-directory: ./job_track_now-api
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
@@ -864,9 +864,9 @@ jobs:
           done
 
       - name: Run tests with coverage
-        working-directory: ./backend
+        working-directory: ./job_track_now-api
         env:
-          PYTHONPATH: /home/runner/work/job_tracker/job_tracker/backend
+          PYTHONPATH: /home/runner/work/job_track_now/job_track_now/job_track_now-api
           DATABASE_URL: postgresql://apiuser:change_me@localhost:5432/jobtracker_test
         run: |
           pytest --cov=app --cov-report=xml --cov-report=html --junitxml=test-results.xml -v
@@ -874,8 +874,8 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./backend/coverage.xml
-          flags: backend
+          files: ./job_track_now-api/coverage.xml
+          flags: job_track_now-api
           name: backend-coverage
 
       - name: Archive test results
@@ -884,15 +884,15 @@ jobs:
         with:
           name: backend-test-results
           path: |
-            backend/htmlcov/
-            backend/test-results.xml
+            job_track_now-api/htmlcov/
+            job_track_now-api/test-results.xml
           retention-days: 30
 
       - name: Publish test results
         if: always()
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
-          files: backend/test-results.xml
+          files: job_track_now-api/test-results.xml
           check_name: Backend Test Results
 
   docker-integration-tests:

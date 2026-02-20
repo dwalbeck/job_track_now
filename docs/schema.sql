@@ -95,6 +95,7 @@ CREATE TABLE IF NOT EXISTS job (
     location                varchar(128),
     interest_level          smallint NOT NULL DEFAULT 1,
     average_score           numeric(4, 3) NOT NULL DEFAULT 5,
+    starred                 boolean NOT NULL DEFAULT false,
     posting_url             text,
     apply_url               text,
     job_status              job_status NOT NULL DEFAULT 'applied',
